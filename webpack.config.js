@@ -7,14 +7,13 @@ const devMode = process.env.NODE_ENV === 'development' ? 'development' : 'produc
 
 module.exports = {
   mode: devMode,
-  entry: path.resolve(__dirname, 'src', 'index.jsx'),
+  entry: path.join(__dirname, 'src', 'index.jsx'),
   output: {
+    path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'),
-    publicPath: '/',
   },
   devServer: {
-    contentBase: path.resolve(__dirname, 'dist'),
+    contentBase: path.join(__dirname, './dist'),
     publicPath: '/',
     open: true,
   },
@@ -57,7 +56,7 @@ module.exports = {
   },
   plugins: [
     new HTMLWebpackPlugin({
-      template: path.resolve(__dirname, 'src', 'template.html'),
+      template: path.join(__dirname, 'src', 'template.html'),
     }),
     new CleanWebpackPlugin(),
     new MiniCSSExtractPlugin(),
