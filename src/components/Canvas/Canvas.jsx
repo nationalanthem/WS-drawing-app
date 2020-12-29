@@ -7,10 +7,12 @@ const Canvas = () => {
 
   const canvasRef = useRef()
   const [ctx, setCtx] = useState()
+  const [canvasState, setCanvasState] = useState()
   const [isMouseDown, setIsMouseDown] = useState()
 
   useLayoutEffect(() => {
     const handleResize = () => {
+      setCanvasState(canvasRef.current.toDataURL())
       setWidth(window.innerWidth)
       setHeight(window.innerHeight)
     }
@@ -22,6 +24,16 @@ const Canvas = () => {
   useEffect(() => {
     if (canvasRef.current) setCtx(canvasRef.current.getContext('2d'))
   }, [canvasRef])
+
+  useEffect(() => {
+    if (ctx && canvasState) {
+      const img = new Image()
+      img.src = canvasState
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0)
+      }
+    }
+  }, [ctx, canvasState])
 
   useEffect(() => {
     const handleMouseDown = (e) => {
