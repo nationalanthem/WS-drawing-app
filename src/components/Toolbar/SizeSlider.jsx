@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { Slider } from '@material-ui/core'
-import './index.css'
 
 export const SizeSlider = () => {
   const [value, setValue] = useState(5)
