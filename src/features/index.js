@@ -3,6 +3,7 @@ import { createSlice, configureStore } from '@reduxjs/toolkit'
 const initialToolsState = {
   strokeStyle: 'black',
   lineWidth: 5,
+  displayToolbar: true,
 }
 
 const initialCanvasState = {
@@ -20,6 +21,9 @@ const toolsSlice = createSlice({
     setLineWidth: (state, action) => {
       state.lineWidth = action.payload
     },
+    setToolbarDisplay: (state, action) => {
+      state.displayToolbar = action.payload
+    },
   },
 })
 
@@ -36,7 +40,7 @@ const canvasSlice = createSlice({
   },
 })
 
-export const { setStrokeStyle, setLineWidth } = toolsSlice.actions
+export const { setStrokeStyle, setLineWidth, setToolbarDisplay } = toolsSlice.actions
 export const { setClearState, setCanvasDataUrl } = canvasSlice.actions
 
 export default configureStore({

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import './Canvas.css'
 import { useSelector, useDispatch } from 'react-redux'
-import { setClearState } from '../../features'
-import { setCanvasDataUrl } from '../../features'
+import { setClearState, setCanvasDataUrl, setToolbarDisplay } from '../../features'
 
 const Canvas = () => {
   const [width, setWidth] = useState(window.innerWidth)
@@ -30,7 +29,7 @@ const Canvas = () => {
   }, [])
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef?.current) {
       setCtx(canvasRef.current.getContext('2d'))
     }
   }, [canvasRef])
@@ -56,7 +55,10 @@ const Canvas = () => {
     if (ctx) {
       const handleMouseDown = (e) => {
         setIsMouseDown(true)
+        dispatch(setToolbarDisplay(false))
         ctx.beginPath()
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
         ctx.moveTo(e.clientX, e.clientY)
       }
 
@@ -69,6 +71,7 @@ const Canvas = () => {
     if (ctx) {
       const handleMouseUp = () => {
         setIsMouseDown(false)
+        dispatch(setToolbarDisplay(true))
         dispatch(setCanvasDataUrl(canvasRef.current.toDataURL()))
       }
       canvasRef.current.addEventListener('mouseup', handleMouseUp)
@@ -83,8 +86,6 @@ const Canvas = () => {
           ctx.lineTo(e.clientX, e.clientY)
           ctx.lineWidth = lineWidth
           ctx.strokeStyle = strokeStyle
-          ctx.lineCap = 'round'
-          ctx.lineJoin = 'round'
           ctx.stroke()
         }
       }
