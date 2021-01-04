@@ -2,44 +2,20 @@
   "name": "drawing-app",
   "version": "1.0.0",
   "private": true,
-  "browserslist": [
-    "last 2 versions",
-    "> 2%",
-    "ie > 9"
-  ],
+  "main": "index.js",
   "scripts": {
-    "build": "cross-env NODE_ENV=production webpack",
-    "start": "cross-env NODE_ENV=development webpack serve",
-    "lint": "eslint ./src/**/*.{js,jsx}"
-  },
-  "dependencies": {
-    "@material-ui/core": "^4.11.2",
-    "@material-ui/icons": "^4.11.2",
-    "@reduxjs/toolkit": "^1.5.0",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "react-redux": "^7.2.2"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "@babel/preset-react": "^7.12.10",
-    "babel-loader": "^8.2.2",
-    "clean-webpack-plugin": "^3.0.0",
-    "cross-env": "^7.0.3",
-    "css-loader": "^5.0.1",
-    "eslint": "^7.16.0",
-    "eslint-plugin-react": "^7.21.5",
-    "html-webpack-plugin": "^4.5.0",
-    "mini-css-extract-plugin": "^1.3.3",
-    "postcss": "^8.2.1",
-    "postcss-loader": "^4.1.0",
-    "postcss-preset-env": "^6.7.0",
-    "style-loader": "^2.0.0",
-    "webpack": "^5.11.1",
-    "webpack-cli": "^4.3.0",
-    "webpack-dev-server": "^3.11.0"
+    "devFrontend": "npm start --prefix client",
+    "devBackend": "nodemon index.js",
+    "start": "concurrently \"npm run devBackend\" \"npm run devFrontend\""
   },
   "author": "nationalanthem",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "ws": "^7.4.2"
+  },
+  "devDependencies": {
+    "concurrently": "^5.3.0",
+    "nodemon": "^2.0.6"
+  }
 }

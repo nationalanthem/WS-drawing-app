@@ -3,6 +3,12 @@ import './Canvas.css'
 import { useSelector, useDispatch } from 'react-redux'
 import { setClearState, setCanvasDataUrl, setToolbarDisplay } from '../../features'
 
+const socket = new WebSocket('ws://localhost:3000')
+
+socket.onmessage = ({ data }) => {
+  console.log(`[Client]: ${data}`)
+}
+
 const Canvas = () => {
   const [width, setWidth] = useState(window.innerWidth)
   const [height, setHeight] = useState(window.innerHeight)
@@ -87,6 +93,7 @@ const Canvas = () => {
           ctx.lineWidth = lineWidth
           ctx.strokeStyle = strokeStyle
           ctx.stroke()
+          socket.send('Drawing...')
         }
       }
 
