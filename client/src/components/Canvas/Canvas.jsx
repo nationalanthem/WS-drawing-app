@@ -2,16 +2,15 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import './Canvas.css'
 import { useSelector, useDispatch } from 'react-redux'
 import { setClearState, setCanvasDataUrl, setToolbarDisplay } from '../../features'
+import { useParams } from 'react-router-dom'
 
 const socket = new WebSocket('ws://localhost:3000')
-
-socket.onmessage = ({ data }) => {
-  console.log(`[Client]: ${data}`)
-}
 
 const Canvas = () => {
   const [width, setWidth] = useState(window.innerWidth)
   const [height, setHeight] = useState(window.innerHeight)
+
+  const { canvasId } = useParams()
 
   const dispatch = useDispatch()
   const lineWidth = useSelector((state) => state.tools.lineWidth)
@@ -22,6 +21,38 @@ const Canvas = () => {
   const [ctx, setCtx] = useState()
   const [canvasState, setCanvasState] = useState()
   const [isMouseDown, setIsMouseDown] = useState()
+
+  useEffect(() => {
+    if (ctx) {
+      socket.onmessage = ({ data }) => {
+        const message = JSON.parse(data)
+
+        switch (message.type) {
+          case 'drawing':
+            ctx.lineTo(message.x, message.y)
+            ctx.lineCap = 'round'
+            ctx.lineJoin = 'round'
+            ctx.lineWidth = message.lineWidth
+            ctx.strokeStyle = message.strokeStyle
+            ctx.stroke()
+            break
+          case 'beginPath':
+            ctx.beginPath()
+            break
+          case 'closePath':
+            ctx.closePath()
+            break
+          case 'clearCanvas':
+            ctx.clearRect(0, 0, message.width, message.height)
+            break
+        }
+      }
+
+      socket.onopen = () => {
+        socket.send(JSON.stringify({ type: 'connection', canvasId }))
+      }
+    }
+  }, [ctx])
 
   useLayoutEffect(() => {
     const handleResize = () => {
@@ -44,6 +75,7 @@ const Canvas = () => {
     if (readyToClear) {
       ctx.clearRect(0, 0, width, height)
       dispatch(setClearState(false))
+      socket.send(JSON.stringify({ type: 'clearCanvas', canvasId, width, height }))
     }
   }, [readyToClear])
 
@@ -66,6 +98,7 @@ const Canvas = () => {
         ctx.lineCap = 'round'
         ctx.lineJoin = 'round'
         ctx.moveTo(e.clientX, e.clientY)
+        socket.send(JSON.stringify({ type: 'beginPath', canvasId }))
       }
 
       canvasRef.current.addEventListener('mousedown', handleMouseDown)
@@ -79,6 +112,7 @@ const Canvas = () => {
         setIsMouseDown(false)
         dispatch(setToolbarDisplay(true))
         dispatch(setCanvasDataUrl(canvasRef.current.toDataURL()))
+        socket.send(JSON.stringify({ type: 'closePath', canvasId }))
       }
       canvasRef.current.addEventListener('mouseup', handleMouseUp)
       return () => canvasRef.current.removeEventListener('mouseup', handleMouseUp)
@@ -93,7 +127,16 @@ const Canvas = () => {
           ctx.lineWidth = lineWidth
           ctx.strokeStyle = strokeStyle
           ctx.stroke()
-          socket.send('Drawing...')
+          socket.send(
+            JSON.stringify({
+              type: 'drawing',
+              canvasId,
+              x: e.clientX,
+              y: e.clientY,
+              lineWidth,
+              strokeStyle,
+            })
+          )
         }
       }
 
