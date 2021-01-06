@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import './Canvas.css'
 import { useSelector, useDispatch } from 'react-redux'
-import { setClearState, setCanvasDataUrl, setToolbarDisplay } from '../../features'
+import {
+  setClearState,
+  setCanvasDataUrl,
+  setToolbarDisplay,
+  setConnectedUsers,
+} from '../../features'
 import { useParams } from 'react-router-dom'
 
 const socket = new WebSocket('ws://localhost:3000')
@@ -28,6 +33,10 @@ const Canvas = () => {
         const message = JSON.parse(data)
 
         switch (message.type) {
+          case 'connection':
+          case 'closeConnection':
+            dispatch(setConnectedUsers(message.users))
+            break
           case 'drawing':
             ctx.lineTo(message.x, message.y)
             ctx.lineCap = 'round'

@@ -22,6 +22,10 @@ wss.on('connection', (ws) => {
         break
     }
   })
+
+  ws.on('close', () => {
+    broadcast(ws, { type: 'closeConnection', canvasId: ws.canvasId })
+  })
 })
 
 const broadcast = (ws, msg) => {
@@ -38,6 +42,9 @@ const broadcast = (ws, msg) => {
       switch (msg.type) {
         case 'connection':
           client.send(JSON.stringify({ type: 'connection', users }))
+          break
+        case 'closeConnection':
+          client.send(JSON.stringify({ type: 'closeConnection', users }))
           break
         case 'drawing':
           client.send(
@@ -58,6 +65,12 @@ const broadcast = (ws, msg) => {
           break
         case 'clearCanvas':
           client.send(JSON.stringify({ type: 'clearCanvas', width: msg.width, height: msg.height }))
+          break
+      }
+    } else if (ws === client) {
+      switch (msg.type) {
+        case 'connection':
+          client.send(JSON.stringify({ type: 'connection', users }))
           break
       }
     }
