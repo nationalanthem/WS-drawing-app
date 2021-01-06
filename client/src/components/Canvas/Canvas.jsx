@@ -29,6 +29,22 @@ const Canvas = () => {
 
   useEffect(() => {
     if (ctx) {
+      fetch(`/api/canvas?id=${canvasId}`)
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.canvasUrl) {
+            const img = new Image()
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0, res.w, res.h)
+            }
+            img.src = res.canvasUrl
+          }
+        })
+    }
+  }, [ctx])
+
+  useEffect(() => {
+    if (ctx) {
       socket.onmessage = ({ data }) => {
         const message = JSON.parse(data)
 
@@ -72,7 +88,7 @@ const Canvas = () => {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [canvasRef])
 
   useEffect(() => {
     if (canvasRef?.current) {
@@ -85,16 +101,22 @@ const Canvas = () => {
       ctx.clearRect(0, 0, width, height)
       dispatch(setClearState(false))
       socket.send(JSON.stringify({ type: 'clearCanvas', canvasId, width, height }))
+      const canvasUrl = canvasRef.current.toDataURL()
+      fetch(`/api/canvas?id=${canvasId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ canvasUrl, w: width, h: height }),
+      })
     }
-  }, [readyToClear])
+  }, [readyToClear, width, height, ctx, canvasRef])
 
   useEffect(() => {
     if (ctx && canvasState) {
       const img = new Image()
-      img.src = canvasState
       img.onload = () => {
         ctx.drawImage(img, 0, 0, width, height)
       }
+      img.src = canvasState
     }
   }, [ctx, canvasState])
 
@@ -120,13 +142,19 @@ const Canvas = () => {
       const handleMouseUp = () => {
         setIsMouseDown(false)
         dispatch(setToolbarDisplay(true))
-        dispatch(setCanvasDataUrl(canvasRef.current.toDataURL()))
+        const canvasUrl = canvasRef.current.toDataURL()
+        dispatch(setCanvasDataUrl(canvasUrl))
         socket.send(JSON.stringify({ type: 'closePath', canvasId }))
+        fetch(`/api/canvas?id=${canvasId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ canvasUrl, w: width, h: height }),
+        })
       }
       canvasRef.current.addEventListener('mouseup', handleMouseUp)
       return () => canvasRef.current.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [ctx])
+  }, [ctx, canvasRef, width, height])
 
   useEffect(() => {
     if (ctx) {
@@ -152,7 +180,7 @@ const Canvas = () => {
       canvasRef.current.addEventListener('mousemove', handleMove)
       return () => canvasRef.current.removeEventListener('mousemove', handleMove)
     }
-  }, [ctx, isMouseDown])
+  }, [ctx, isMouseDown, lineWidth, strokeStyle])
 
   return <canvas ref={canvasRef} id="canvas" width={width} height={height} />
 }

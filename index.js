@@ -1,11 +1,15 @@
 const express = require('express')
 const WebSocket = require('ws')
+const fs = require('fs')
+const path = require('path')
 
 const app = express()
 const server = require('http').createServer(app)
 const wss = new WebSocket.Server({ server })
 
-const PORT = process.env.PORT || 3000
+app.use(express.json({ limit: '10mb' }))
+
+const PORT = 3000
 
 wss.on('connection', (ws) => {
   ws.on('message', (message) => {
@@ -76,6 +80,44 @@ const broadcast = (ws, msg) => {
     }
   })
 }
+
+app.get('/api/canvas', (req, res) => {
+  const { id } = req.query
+  if (!fs.existsSync(path.join(__dirname, 'canvases', id, 'canvas.png')))
+    return res.json({ canvasUrl: null })
+  const canvasRaw = fs.readFileSync(path.join(__dirname, 'canvases', id, 'canvas.png'))
+  const canvasUrl = `data:image/png;base64,${canvasRaw.toString('base64')}`
+  const { w, h } = JSON.parse(
+    fs.readFileSync(path.join(__dirname, 'canvases', id, 'size.txt'), 'utf8')
+  )
+  res.json({ canvasUrl, w, h })
+})
+
+app.post('/api/canvas', (req, res) => {
+  const { canvasUrl, w, h } = req.body
+  const { id } = req.query
+  const base64Data = canvasUrl.replace(/^data:image\/png;base64,/, '')
+
+  !fs.existsSync(path.join(__dirname, 'canvases')) && fs.mkdirSync(path.join(__dirname, 'canvases'))
+  !fs.existsSync(path.join(__dirname, 'canvases', id)) &&
+    fs.mkdirSync(path.join(__dirname, 'canvases', id))
+
+  if (fs.existsSync(path.join(__dirname, 'canvases', id, 'size.txt'))) {
+    const size = JSON.parse(
+      fs.readFileSync(path.join(__dirname, 'canvases', id, 'size.txt'), 'utf8')
+    )
+
+    if ((w >= size.w && h >= size.h) || true) {
+      fs.writeFileSync(path.join(__dirname, 'canvases', id, 'size.txt'), JSON.stringify({ w, h }))
+      fs.writeFileSync(path.join(__dirname, 'canvases', id, 'canvas.png'), base64Data, 'base64')
+      return res.sendStatus(200)
+    }
+  }
+
+  fs.writeFileSync(path.join(__dirname, 'canvases', id, 'size.txt'), JSON.stringify({ w, h }))
+  fs.writeFileSync(path.join(__dirname, 'canvases', id, 'canvas.png'), base64Data, 'base64')
+  res.sendStatus(200)
+})
 
 server.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`)
