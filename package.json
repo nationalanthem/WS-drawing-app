@@ -4,6 +4,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
+    "postinstall": "cd client && npm install",
     "devFrontend": "npm start --prefix client",
     "devBackend": "nodemon index.js",
     "start": "concurrently \"npm run devBackend\" \"npm run devFrontend\""
